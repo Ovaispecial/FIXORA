@@ -1,0 +1,353 @@
+fixora-backend/
+│
+├── server.js
+├── package.json
+├── .env
+│
+├── config/
+├── models/
+├── routes/
+├── controllers/
+├── middleware/
+├── sockets/
+├── utils/
+└── services/
+Backend Stack:
+- Node.js
+- Express.js
+- MongoDB
+- JWT Authentication
+- Socket.io
+- Paystack
+- Flutterwave
+const mongoose = require('mongoose')
+
+const userSchema = new mongoose.Schema({
+
+  fullname: String,
+
+  email: String,
+
+  password: String,
+
+  phoneNumber: String,
+
+  role: {
+    type: String,
+    enum: ['customer', 'artisan', 'admin'],
+    default: 'customer'
+  },
+
+  state: String,
+
+  profileImage: String,
+
+  membership: {
+    type: String,
+    enum: ['free', 'pro', 'elite'],
+    default: 'free'
+  },
+
+  verified: {
+    type: Boolean,
+    default: false
+  },
+
+  walletBalance: {
+    type: Number,
+    default: 0
+  }
+
+}, {
+  timestamps: true
+})
+
+module.exports = mongoose.model('User', userSchema)
+const mongoose = require('mongoose')
+
+const jobSchema = new mongoose.Schema({
+
+  customer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  artisan: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  title: String,
+
+  description: String,
+
+  category: String,
+
+  state: String,
+
+  budget: Number,
+
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid'],
+    default: 'pending'
+  },
+
+  contactUnlocked: {
+    type: Boolean,
+    default: false
+  },
+
+  liveCallingEnabled: {
+    type: Boolean,
+    default: false
+  },
+
+  escrowProtected: {
+    type: Boolean,
+    default: true
+  },
+
+  status: {
+    type: String,
+    enum: ['open', 'ongoing', 'completed'],
+    default: 'open'
+  }
+
+}, {
+  timestamps: true
+})
+
+module.exports = mongoose.model('Job', jobSchema)
+const mongoose = require('mongoose')
+
+const walletSchema = new mongoose.Schema({
+
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+
+  balance: {
+    type: Number,
+    default: 0
+  },
+
+  pendingBalance: {
+    type: Number,
+    default: 0
+  }
+
+})
+
+module.exports = mongoose.model('Wallet', walletSchema)
+const calculateCommission = (amount) => {
+
+  const commission = amount * 0.10
+
+  const artisanReceives = amount - commission
+
+  return {
+    commission,
+    artisanReceives
+  }
+}
+
+module.exports = calculateCommission
+const express = require('express')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const User = require('../models/User')
+
+const router = express.Router()
+
+router.post('/register', async (req, res) => {
+
+  try {
+
+    const {
+      fullname,
+      email,
+      password,
+      role
+    } = req.body
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const user = await User.create({
+      fullname,
+      email,
+      password: hashedPassword,
+      role
+    })
+
+    res.status(201).json(user)
+
+  } catch(error) {
+
+    res.status(500).json({
+      message: error.message
+    })
+  }
+})
+
+router.post('/login', async (req, res) => {
+
+  try {
+
+    const {
+      email,
+      password
+    } = req.body
+
+    const user = await User.findOne({ email })
+
+    if(!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      })
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password)
+
+    if(!validPassword) {
+      return res.status(400).json({
+        message: 'Invalid credentials'
+      })
+    }
+
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET
+    )
+
+    res.json({
+      token,
+      user
+    })
+
+  } catch(error) {
+
+    res.status(500).json({
+      message: error.message
+    })
+  }
+})
+
+module.exports = router
+const forbiddenPatterns = [
+  /\\b\\d{11}\\b/g,
+  /whatsapp/i,
+  /account number/i,
+  /bank transfer/i,
+  /pay me/i,
+  /call me/i
+]
+
+const containsForbiddenContent = (message) => {
+  return forbiddenPatterns.some(pattern =>
+    pattern.test(message)
+  )
+}
+
+module.exports = containsForbiddenContent
+const unlockCommunication = async (job) => {
+
+  job.contactUnlocked = true
+
+  job.liveCallingEnabled = true
+
+  await job.save()
+}
+const axios = require('axios')
+
+const initializePayment = async (
+  email,
+  amount
+) => {
+
+  const response = await axios.post(
+
+    'https://api.paystack.co/transaction/initialize',
+
+    {
+      email,
+      amount: amount * 100
+    },
+
+    {
+      headers: {
+        Authorization:
+        `Bearer ${process.env.PAYSTACK_SECRET}`
+      }
+    }
+  )
+
+  return response.data
+}
+
+module.exports = initializePayment
+router.post('/verify-payment', async (req, res) => {
+
+  try {
+
+    const {
+      reference,
+      jobId
+    } = req.body
+
+    const verification =
+    await verifyPaystack(reference)
+
+    if(verification.status === true) {
+
+      const job = await Job.findById(jobId)
+
+      job.paymentStatus = 'paid'
+
+      job.contactUnlocked = true
+
+      job.liveCallingEnabled = true
+
+      await job.save()
+
+      return res.json({
+        success: true,
+        message: 'Payment verified'
+      })
+    }
+
+  } catch(error) {
+
+    res.status(500).json({
+      message: error.message
+    })
+  }
+})
+const socketio = require('socket.io')
+
+module.exports = (server) => {
+
+  const io = socketio(server, {
+    cors: {
+      origin: '*'
+    }
+  })
+
+  io.on('connection', socket => {
+
+    console.log('User connected')
+
+    socket.on('sendMessage', data => {
+      io.emit('receiveMessage', data)
+    })
+
+    socket.on('disconnect', () => {
+      console.log('User disconnected')
+    })
+
+  })
+}
+- Cloudinary
+- Agora SDK
+- Firebase Notifications
