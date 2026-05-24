@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const bcrypt = require('bcryptjs')
-
+const jwt = require('jsonwebtoken')
 const User = require('../models/User')
 router.get('/test', (req, res) => {
     res.json({ message: 'Auth Route Working' })
