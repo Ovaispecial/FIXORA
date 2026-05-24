@@ -24,7 +24,7 @@ app.get('/test', (req, res) => {
 })
 
 app.use('/api/auth', require('./routes/authRoutes'))
-
+app.use('/api/artisans', require('./routes/artisanRoutes'))
 const PORT = process.env.PORT || 3000
 
 app.listen(PORT, () => {
