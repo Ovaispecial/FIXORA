@@ -1,13 +1,54 @@
 const router = require('express').Router()
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+
 const User = require('../models/User')
+const authMiddleware = require('../middleware/authMiddleware')
+
 router.get('/test', (req, res) => {
     res.json({ message: 'Auth Route Working' })
 })
+
 router.post('/register', async (req, res) => {
 
     try {
+
+        const { fullname, email, password, role } = req.body
+
+        const existingUser = await User.findOne({ email })
+
+        if (existingUser) {
+            return res.status(400).json({
+                message: 'User already exists'
+            })
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        const newUser = new User({
+            fullname,
+            email,
+            password: hashedPassword,
+            role
+        })
+
+        await newUser.save()
+
+        res.status(201).json({
+            message: 'User registered successfully',
+            user: newUser
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            error: error.message
+        })
+
+    }
+
+})
+
 router.post('/login', async (req, res) => {
 
     try {
@@ -56,39 +97,13 @@ router.post('/login', async (req, res) => {
     }
 
 })
-        const { fullname, email, password, role } = req.body
 
-        const existingUser = await User.findOne({ email })
+router.get('/profile', authMiddleware, async (req, res) => {
 
-        if (existingUser) {
-            return res.status(400).json({
-                message: 'User already exists'
-            })
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10)
-
-        const newUser = new User({
-            fullname,
-            email,
-            password: hashedPassword,
-            role
-        })
-
-        await newUser.save()
-
-        res.status(201).json({
-            message: 'User registered successfully',
-            user: newUser
-        })
-
-    } catch (error) {
-
-        res.status(500).json({
-            error: error.message
-        })
-
-    }
+    res.json({
+        message: 'Protected profile route',
+        user: req.user
+    })
 
 })
 
