@@ -55,5 +55,68 @@ router.get('/job/:jobId', async (req, res) => {
     }
 
 })
+router.put('/accept/:bidId', authMiddleware, async (req, res) => {
 
+    try {
+
+        const updatedBid = await Bid.findByIdAndUpdate(
+
+            req.params.bidId,
+
+            {
+                status: 'accepted'
+            },
+
+            {
+                new: true
+            }
+
+        )
+
+        res.status(200).json({
+            message: 'Bid accepted successfully',
+            bid: updatedBid
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            error: error.message
+        })
+
+    }
+
+})
+router.put('/reject/:bidId', authMiddleware, async (req, res) => {
+
+    try {
+
+        const updatedBid = await Bid.findByIdAndUpdate(
+
+            req.params.bidId,
+
+            {
+                status: 'rejected'
+            },
+
+            {
+                new: true
+            }
+
+        )
+
+        res.status(200).json({
+            message: 'Bid rejected successfully',
+            bid: updatedBid
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            error: error.message
+        })
+
+    }
+
+})
 module.exports = router
