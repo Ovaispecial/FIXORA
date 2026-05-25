@@ -28,8 +28,25 @@ availabilityStatus: {
     type: String,
     enum: ['online', 'offline', 'busy'],
     default: 'offline'
-}
+},
+bio: {
+    type: String,
+    default: ''
+},
 
+skills: [{
+    type: String
+}],
+
+experience: {
+    type: Number,
+    default: 0
+},
+
+category: {
+    type: String,
+    default: ''
+}
 }, {
     timestamps: true
 })
