@@ -42,6 +42,7 @@ app.use('/api/profile', require('./routes/profileRoutes'))
 app.use('/api/search', require('./routes/searchRoutes'))
 app.use('/api/portfolios', require('./routes/portfolioRoutes'))
 app.use('/api/reports', require('./routes/reportRoutes'))
+app.use('/api/blocks', require('./routes/blockRoutes'))
 const PORT = process.env.PORT || 3000
 
 app.listen(PORT, () => {
