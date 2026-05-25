@@ -30,6 +30,7 @@ app.use('/api/bids', require('./routes/bidRoutes'))
 app.use('/api/payments', require('./routes/paymentRoutes'))
 app.use('/api/messages', require('./routes/messageRoutes'))
 app.use('/api/reviews', require('./routes/reviewRoutes'))
+app.use('/api/admin', require('./routes/adminRoutes'))
 const PORT = process.env.PORT || 3000
 
 app.listen(PORT, () => {
