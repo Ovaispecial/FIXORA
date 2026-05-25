@@ -15,13 +15,11 @@ router.post('/send', authMiddleware, async (req, res) => {
         } = req.body
 
         const newMessage = new Message({
-
             sender: req.user.id,
             receiver,
             job,
             message,
             messageType
-
         })
 
         await newMessage.save()
