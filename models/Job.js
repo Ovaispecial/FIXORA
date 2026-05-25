@@ -30,11 +30,11 @@ const jobSchema = new mongoose.Schema({
         type: String
     },
 
-    status: {
-        type: String,
-        enum: ['open', 'in-progress', 'completed'],
-        default: 'open'
-    }
+status: {
+    type: String,
+    enum: ['open', 'in_progress', 'completed', 'cancelled'],
+    default: 'open'
+}
 
 }, {
     timestamps: true
