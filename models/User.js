@@ -18,11 +18,17 @@ const userSchema = new mongoose.Schema({
         required: true
     },
 
-    role: {
-        type: String,
-        enum: ['customer', 'artisan', 'admin'],
-        default: 'customer'
-    }
+ role: {
+    type: String,
+    enum: ['customer', 'artisan', 'admin'],
+    default: 'customer'
+},
+
+availabilityStatus: {
+    type: String,
+    enum: ['online', 'offline', 'busy'],
+    default: 'offline'
+}
 
 }, {
     timestamps: true
