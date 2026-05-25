@@ -105,6 +105,34 @@ router.get('/search/:profession', async (req, res) => {
     }
 
 })
+router.put('/update/:id', authMiddleware, async (req, res) => {
 
-module.exports = router
+    try {
+
+        const updatedProfile = await ArtisanProfile.findByIdAndUpdate(
+
+            req.params.id,
+
+            req.body,
+
+            {
+                new: true
+            }
+
+        )
+
+        res.status(200).json({
+            message: 'Profile updated successfully',
+            profile: updatedProfile
+        })
+
+    } catch (error) {
+
+        res.status(500).json({
+            error: error.message
+        })
+
+    }
+
+})
 module.exports = router
