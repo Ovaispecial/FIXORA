@@ -1,7 +1,6 @@
 const mongoose = require('mongoose')
 
-const emergencyRequestSchema = new mongoose.Schema({
-
+const EmergencyRequest = require('../models/EmergencyRequest')
     customer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
