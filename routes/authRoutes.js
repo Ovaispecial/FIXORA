@@ -34,8 +34,7 @@ router.post('/register', async (req, res) => {
             fullname,
             email,
             password: hashedPassword,
-            role
-
+            role: role === 'artisan' ? 'artisan' : 'client'
         })
 
         await user.save()
